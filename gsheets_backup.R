@@ -20,7 +20,8 @@ sheets <- gs_ls()
 # last updated time of the google sheet
 do_backup <- function(gsheet) {
   fname <- gsheet[['filename']]
-  (file.exists(fname) & (file.mtime(fname) < as.POSIXct(gsheet[['updated']])))
+  ifelse(file.exists(fname), file.mtime(fname) < as.POSIXct(gsheet[['updated']]), 
+         TRUE)
 }
 
 # Download a copy of the google sheet if it's been updated since the last backup
