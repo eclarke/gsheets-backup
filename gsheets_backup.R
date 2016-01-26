@@ -34,6 +34,26 @@ register_and_download <- function(gsheet) {
   }
 }
 
+# Replaces non-alphanumerics with underscores.
+# Stolen from knitr:::sanitize_fn
+sanitize_fname <- function(path) 
+{
+  if (grepl("[^~:_./\\[:alnum:]-]", path)) {
+    warning("replaced special characters in filename \"", 
+            path, "\" -> \"", path <- gsub("[^~:_./\\[:alnum:]-]", 
+                                           "_", path), "\"")
+  }
+  s = strsplit(path, "[/\\\\]")[[1L]]
+  i = (s != ".") & (s != "..") & grepl("\\.", s)
+  if (any(i)) {
+    s[i] = gsub("\\.", "_", s[i])
+    path = paste(s, collapse = "/")
+    warning("dots in paths replaced with _ (\"", path, 
+            "\")")
+  }
+  path
+}
+
 d_ply(sheets, .(sheet_title), function(ws) {
   
   # Choose a destination filename. If there are duplicate sheet names, append
@@ -43,7 +63,7 @@ d_ply(sheets, .(sheet_title), function(ws) {
   } else {
     ws$filename = paste(ws$sheet_title, "xlsx", sep='.')
   }
-  
+  ws$filename <- sapply(ws$filename, sanitize_fname)
   ws$filename <- file.path(backup.fp, ws$filename)
   
   apply(ws, 1, register_and_download)
