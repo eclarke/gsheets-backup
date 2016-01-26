@@ -63,7 +63,7 @@ d_ply(sheets, .(sheet_title), function(ws) {
   } else {
     ws$filename = paste(ws$sheet_title, "xlsx", sep='.')
   }
-  ws$filename <- sapply(ws$filename, sanitize_fname)
+  # ws$filename <- sapply(ws$filename, sanitize_fname)
   ws$filename <- file.path(backup.fp, ws$filename)
   
   apply(ws, 1, register_and_download)
