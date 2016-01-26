@@ -3,8 +3,6 @@
 
 library(googlesheets)
 library(plyr)
-library(dplyr)
-
 
 # Variables ---------------------------------------------------------------
 
@@ -41,7 +39,7 @@ d_ply(sheets, .(sheet_title), function(ws) {
   # Choose a destination filename. If there are duplicate sheet names, append
   # the sheet key to make it unique.
   if (nrow(ws) > 1) {
-    ws <- mutate(ws, filename=paste(sheet_title, sheet_key, "xlsx", sep='.'))
+    ws$filename = paste(ws$sheet_title, sheet_key, "xlsx", sep='.')
   } else {
     ws$filename = paste(ws$sheet_title, "xlsx", sep='.')
   }
