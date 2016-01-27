@@ -1,10 +1,18 @@
 
-# Libraries ---------------------------------------------------------------
-
 library(googlesheets)
 library(plyr)
 
-# Variables ---------------------------------------------------------------
+# Replaces non-alphanumerics with underscores.
+# Stolen from knitr:::sanitize_fn
+sanitize_fname <- function(path) 
+{
+  if (grepl("[^~:_./\\[:alnum:]-]", path)) {
+    warning("replaced special characters in sheet name \"", 
+            path, "\" -> \"", path <- gsub("[^~:_./\\[:alnum:]-]", 
+                                           "_", path), "\"")
+  }
+  path
+}
 
 backup.fp <- file.path("~/gsheets_backup")
 
@@ -15,6 +23,8 @@ if (!dir.exists(backup.fp)) {
 
 # Load sheets. This may prompt for authentication
 sheets <- gs_ls()
+# Sanitize sheet names
+sheets$sanitized_titles <- sanitize_fname(sheets$sheet_title)
 
 # Check if the destination file exists, and if it does, compare the mod time the
 # last updated time of the google sheet
@@ -34,37 +44,16 @@ register_and_download <- function(gsheet) {
   }
 }
 
-# Replaces non-alphanumerics with underscores.
-# Stolen from knitr:::sanitize_fn
-sanitize_fname <- function(path) 
-{
-  if (grepl("[^~:_./\\[:alnum:]-]", path)) {
-    warning("replaced special characters in filename \"", 
-            path, "\" -> \"", path <- gsub("[^~:_./\\[:alnum:]-]", 
-                                           "_", path), "\"")
-  }
-  s = strsplit(path, "[/\\\\]")[[1L]]
-  i = (s != ".") & (s != "..") & grepl("\\.", s)
-  if (any(i)) {
-    s[i] = gsub("\\.", "_", s[i])
-    path = paste(s, collapse = "/")
-    warning("dots in paths replaced with _ (\"", path, 
-            "\")")
-  }
-  path
-}
 
 d_ply(sheets, .(sheet_title), function(ws) {
   
   # Choose a destination filename. If there are duplicate sheet names, append
   # the sheet key to make it unique.
   if (nrow(ws) > 1) {
-    ws$filename = paste(ws$sheet_title, ws$sheet_key, "xlsx", sep='.')
-  } else {
-    ws$filename = paste(ws$sheet_title, "xlsx", sep='.')
+    ws$sanitized_title = paste(ws$sanitized_title, ws$sheet_key, sep='.')
   }
-  # ws$filename <- sapply(ws$filename, sanitize_fname)
-  ws$filename <- file.path(backup.fp, ws$filename)
+  
+  ws$filename <- file.path(backup.fp, paste0(ws$sanitized_title, '.xlsx'))
   
   apply(ws, 1, register_and_download)
 
